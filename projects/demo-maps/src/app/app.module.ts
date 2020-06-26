@@ -31,6 +31,7 @@ import { RouteLicensesComponent } from './route-components/route-licenses/route-
 import { HttpClientModule } from '@angular/common/http';
 import { RouteMap7Component } from './route-components/route-example-olperformance/route-map7.component';
 import { ExampleLayerActionComponent } from './components/example-layer-action/example-layer-action.component';
+import { SunlightComponent } from './route-components/route-example-custom-layers/custom_renderer/sunlight/sunlight.component';
 
 @NgModule({
   declarations: [
@@ -50,7 +51,8 @@ import { ExampleLayerActionComponent } from './components/example-layer-action/e
     BlinkerComponent,
     FpserComponent,
     RouteLicensesComponent,
-    ExampleLayerActionComponent
+    ExampleLayerActionComponent,
+    SunlightComponent
   ],
   imports: [
     BrowserModule,

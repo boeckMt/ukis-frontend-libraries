@@ -4,24 +4,21 @@ import { MapStateService } from '@dlr-eoc/services-map-state';
 import { MapOlService, IMapControls } from '@dlr-eoc/map-ol';
 import { OsmTileLayer } from '@dlr-eoc/base-layers-raster';
 
-import { Heatmap as olHeatmapLayer, Vector as olVectorLayer, VectorImage as olVectorImageLayer } from 'ol/layer';
-import olVectorSource from 'ol/source/Vector';
-import olCluster from 'ol/source/Cluster';
-import { GeoJSON as olGeoJSON, KML as olKML, TopoJSON as olTopoJSON } from 'ol/format';
-import olImageWMS from 'ol/source/ImageWMS';
-import olImageLayer from 'ol/layer/Image';
-
-import olVectorTileLayer from 'ol/layer/VectorTile';
-import olVectorTileSource from 'ol/source/VectorTile';
-import olMVT from 'ol/format/MVT';
+import { Heatmap as olHeatmapLayer, Vector as olVectorLayer, VectorImage as olVectorImageLayer, Image as olImageLayer, VectorTile as olVectorTileLayer } from 'ol/layer';
+import { Vector as olVectorSource, Cluster as olCluster, ImageWMS as olImageWMS, ImageStatic as olStatic, VectorTile as olVectorTileSource } from 'ol/source';
+import { GeoJSON as olGeoJSON, KML as olKML, TopoJSON as olTopoJSON, MVT as olMVT } from 'ol/format';
 import { Fill as olFill, Stroke as olStroke, Style as olStyle } from 'ol/style';
+
 import { ExampleLayerActionComponent } from '../../components/example-layer-action/example-layer-action.component';
+import { WindFieldLayer } from './custom_renderer/particle_renderer';
+import { DtmLayer } from './custom_renderer/dtm_renderer';
+import { SunlightComponent } from './custom_renderer/sunlight/sunlight.component';
 
 @Component({
   selector: 'app-route-map4',
   templateUrl: './route-map4.component.html',
   styleUrls: ['./route-map4.component.scss'],
-  /** use differnt instances of the services only for testing with diffenr routs  */
+  /** use different instances of the services only for testing with different routes  */
   providers: [LayersService, MapStateService, MapOlService]
 })
 export class RouteMap4Component implements OnInit, AfterViewInit {
@@ -279,7 +276,102 @@ export class RouteMap4Component implements OnInit, AfterViewInit {
       bbox: [-133.9453125, 18.979025953255267, -60.46875, 52.908902047770255] /** for zoom to the layer */
     });
 
-    const layers = [osmLayer1, layersGroup1, clusterLayer, vectorTile, imageWmsLayer, kmlLayer, topoJsonLayer];
+
+    const windMeasurements = {
+      type: 'FeatureCollection',
+      features: [{
+          type: 'Feature',
+          geometry: {
+              type: 'Point',
+              coordinates: [11, 50]
+          },
+          properties: {
+              wind: [0.3, 0.2],
+          }
+      }, {
+          type: 'Feature',
+          geometry: {
+              type: 'Point',
+              coordinates: [12, 49]
+          },
+          properties: {
+              wind: [0.2, 0.05],
+          }
+      }, {
+          type: 'Feature',
+          geometry: {
+              type: 'Point',
+              coordinates: [9.5, 48]
+          },
+          properties: {
+              wind: [0.4, -0.1],
+          }
+      }, {
+          type: 'Feature',
+          geometry: {
+              type: 'Point',
+              coordinates: [11.5, 48.5]
+          },
+          properties: {
+              wind: [0.1, -0.8],
+          }
+      }, {
+        type: 'Feature',
+        geometry: {
+            type: 'Point',
+            coordinates: [11.2, 47.5]
+        },
+        properties: {
+            wind: [-0.1, 0.2],
+        }
+    }]
+  };
+
+
+    const windFieldLayer = new CustomLayer({
+      id: 'windFieldLayer',
+      name: 'Wind Field',
+      filtertype: 'Layers',
+      custom_layer: new WindFieldLayer({
+        source: new olVectorSource({
+            features: this.mapSvc.geoJsonToFeatures(windMeasurements)
+          })
+      }),
+      opacity: 0.6,
+      visible: false
+    });
+
+    const dtmLayer = new CustomLayer({
+      id: 'dtmLayer',
+      name: 'SRTM DTM',
+      filtertype: 'Layers',
+      custom_layer: new DtmLayer({
+        source: new olStatic({
+            url: 'assets/images/srtm_small.png',
+            imageExtent: [10.00, 45.00, 15.00, 50.00],
+            projection: 'EPSG:4326',
+          })
+      }),
+      action: {
+        component: SunlightComponent,
+        inputs: {
+          changeHandler: (x: number, y: number) => {
+            dtmLayer.custom_layer.updateSunAngle([x, y]);
+          }
+        }
+      },
+      opacity: 0.6,
+      visible: false
+    });
+
+    const layerGroup2 = new LayerGroup({
+      name: 'Webgl Group',
+      filtertype: 'Layers',
+      id: 'group2',
+      layers: [dtmLayer, windFieldLayer]
+    });
+
+    const layers = [osmLayer1, layersGroup1, layerGroup2, clusterLayer, vectorTile, imageWmsLayer, kmlLayer, topoJsonLayer];
 
     layers.forEach(layer => {
       if (layer instanceof Layer) {
