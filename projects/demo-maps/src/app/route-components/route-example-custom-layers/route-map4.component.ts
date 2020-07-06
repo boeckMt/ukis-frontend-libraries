@@ -13,6 +13,7 @@ import { ExampleLayerActionComponent } from '../../components/example-layer-acti
 import { WindFieldLayer } from './custom_renderer/particle_renderer';
 import { DtmLayer } from './custom_renderer/dtm_renderer';
 import { SunlightComponent } from './custom_renderer/sunlight/sunlight.component';
+import { BarsLayer } from './custom_renderer/threejs_renderer';
 
 @Component({
   selector: 'app-route-map4',
@@ -364,11 +365,24 @@ export class RouteMap4Component implements OnInit, AfterViewInit {
       visible: false
     });
 
+    const barLayer = new CustomLayer({
+      id: 'three',
+      name: 'Bars layer',
+      custom_layer: new BarsLayer({
+        source: new olVectorSource({
+          features: this.mapSvc.geoJsonToFeatures(windMeasurements)
+        })
+      }),
+      filtertype: 'Layers',
+      opacity: 0.6,
+      visible: false
+    });
+
     const layerGroup2 = new LayerGroup({
       name: 'Webgl Group',
       filtertype: 'Layers',
       id: 'group2',
-      layers: [dtmLayer, windFieldLayer]
+      layers: [dtmLayer, windFieldLayer, barLayer]
     });
 
     const layers = [osmLayer1, layersGroup1, layerGroup2, clusterLayer, vectorTile, imageWmsLayer, kmlLayer, topoJsonLayer];
