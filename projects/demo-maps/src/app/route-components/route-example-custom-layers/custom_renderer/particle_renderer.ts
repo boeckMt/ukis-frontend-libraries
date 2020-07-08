@@ -5,6 +5,7 @@ import { FrameState } from 'ol/PluggableMap';
 import LayerRenderer from 'ol/renderer/Layer';
 import VectorLayer from 'ol/layer/Vector';
 import Point from 'ol/geom/Point';
+import Delaunator from 'delaunator';
 
 
 export class WindFieldLayer extends VectorLayer {
@@ -248,48 +249,13 @@ export class ParticleRenderer extends LayerRenderer {
             return [coordinates[0], coordinates[1], props.wind[0], props.wind[1]];
         };
 
-        const distance = (a: Point, b: Point): number => {
-            const ca = a.getCoordinates();
-            const cb = b.getCoordinates();
-            return Math.sqrt(Math.pow((ca[0] - cb[0]), 2)  + Math.pow((ca[1] - cb[1]), 2));
-        };
-
-
-
-        let minX = 100000000000;
-        let maxY = -100000000000;
-        for (const feature of features) {
-            const c = feature.getGeometry().getCoordinates();
-            if (c[0] < minX) {
-                minX = c[0];
-            }
-            if (c[1] > maxY) {
-                maxY = c[1];
-            }
-        }
-        const upperLeft = new Point([minX, maxY]);
-
-
-        const featuresSorted = features.sort((a, b) => {
-            const da = distance(a.getGeometry(), upperLeft);
-            const db = distance(b.getGeometry(), upperLeft);
-            if (da < db) {
-                return 1;
-            } else if (da > db) {
-                return -1;
-            } else {
-                return 0;
-            }
-        });
-
+        const coordinates = features.map(f => f.getGeometry().getCoordinates());
+        const delauney = Delaunator.from(coordinates);
+        const indices = delauney.triangles;
         const aObservations = [];
-        for (let i = 0; i < featuresSorted.length - 2; i++) {
-            const o1 = pointToObservation(featuresSorted[i]);
-            const o2 = pointToObservation(featuresSorted[i + 1]);
-            const o3 = pointToObservation(featuresSorted[i + 2]);
-            aObservations.push(o1);
-            aObservations.push(o2);
-            aObservations.push(o3);
+        for (const i of indices) {
+            const o = pointToObservation(features[i]);
+            aObservations.push(o);
         }
 
         return aObservations;

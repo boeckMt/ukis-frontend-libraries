@@ -32,7 +32,7 @@ export class ThreeJsRenderer extends LayerRenderer {
         canvas.style.position = 'absolute';
 
         // setting up three js
-        const renderer = new WebGLRenderer({canvas});
+        const renderer = new WebGLRenderer({canvas, alpha: true});
         const camera = new PerspectiveCamera(75, 2, 0.1, 5);
         camera.position.z = 2;
         const scene = new Scene();
